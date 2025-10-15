@@ -11,6 +11,7 @@ interface SearchAndFilterProps {
   appointmentCount: number;
 }
 
+// Available appointment types for filtering
 const APPOINTMENT_TYPES: { value: AppointmentType | 'all'; label: string }[] = [
   { value: 'all', label: 'All Types' },
   { value: 'checkup', label: 'Checkup' },
@@ -32,12 +33,13 @@ export function SearchAndFilter({
   return (
     <div className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 transition-colors">
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-
-        {/* search Input */}
+        
+        {/* Search Input */}
         <div className="flex-1 w-full sm:max-w-md">
           <div className="relative">
+            {/* Search icon */}
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg className="h-4 w-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-4 w-4 text-gray-400 dark:text-gray-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
@@ -51,9 +53,10 @@ export function SearchAndFilter({
           </div>
         </div>
 
-        {/* filter Controls */}
+        {/* Filter Controls */}
         <div className="flex items-center gap-2 w-full sm:w-auto">
-          {/* Type Filter */}
+          
+          {/* Appointment Type Filter */}
           <select
             value={selectedType}
             onChange={(e) => onTypeChange(e.target.value as AppointmentType | 'all')}
@@ -66,7 +69,7 @@ export function SearchAndFilter({
             ))}
           </select>
 
-          {/* clear filters button */}
+          {/* Clear Filters Button*/}
           {hasActiveFilters && (
             <button
               onClick={onClear}
@@ -76,38 +79,42 @@ export function SearchAndFilter({
             </button>
           )}
 
-          {/* results count */}
-          <div className="hidden sm:block text-sm text-gray-500 dark:text-gray-400 ml-2">
+          <div className="hidden sm:block text-sm text-gray-500 dark:text-gray-400 ml-2 transition-colors">
             {appointmentCount} {appointmentCount === 1 ? 'appointment' : 'appointments'}
           </div>
         </div>
       </div>
 
-      {/* mobile*/}
-      <div className="block sm:hidden mt-2 text-sm text-gray-500 dark:text-gray-400">
+      {/* Mobile Results Count */}
+      <div className="block sm:hidden mt-2 text-sm text-gray-500 dark:text-gray-400 transition-colors">
         {appointmentCount} {appointmentCount === 1 ? 'appointment' : 'appointments'} found
       </div>
 
-      {/* active filters */}
+      {/* Active Filters Indicator */}
       {hasActiveFilters && (
         <div className="mt-3 flex flex-wrap gap-2">
+          {/* Search term filter tag */}
           {searchTerm && (
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
-              Patient: "{searchTerm}"
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 transition-colors">
+              Patient: &ldquo;{searchTerm}&rdquo;
               <button
                 onClick={() => onSearchChange('')}
-                className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full text-blue-400 dark:text-blue-300 hover:text-blue-600 dark:hover:text-blue-100"
+                className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full text-blue-400 dark:text-blue-300 hover:text-blue-600 dark:hover:text-blue-100 transition-colors"
+                aria-label="Remove patient filter"
               >
                 ×
               </button>
             </span>
           )}
+          
+          {/* Appointment type filter tag */}
           {selectedType !== 'all' && (
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 capitalize">
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 capitalize transition-colors">
               Type: {selectedType}
               <button
                 onClick={() => onTypeChange('all')}
-                className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full text-green-400 dark:text-green-300 hover:text-green-600 dark:hover:text-green-100"
+                className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full text-green-400 dark:text-green-300 hover:text-green-600 dark:hover:text-green-100 transition-colors"
+                aria-label="Remove type filter"
               >
                 ×
               </button>
