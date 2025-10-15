@@ -14,13 +14,16 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { CalendarView } from '@/types';
-
-// TODO: Import your components
-// import { DoctorSelector } from './DoctorSelector';
-// import { DayView } from './DayView';
-// import { WeekView } from './WeekView';
+import { DoctorSelector } from './DoctorSelector';
+import { DayView } from './DayView';
+import { WeekView } from './WeekView';
+import { SearchAndFilter } from './ui/SearchAndFilter';
+import { useAppointments } from '@/hooks/useAppointments';
+import { useAppointmentSearch } from '@/hooks/useAppointmentSearch';
+import { format, addDays, subDays, endOfWeek, startOfWeek } from 'date-fns';
+import { LoadingState, ErrorState } from '@/components/ui/Spinner';
 
 interface ScheduleViewProps {
   selectedDoctorId: string;
@@ -31,19 +34,6 @@ interface ScheduleViewProps {
   onViewChange: (view: CalendarView) => void;
 }
 
-/**
- * ScheduleView Component
- *
- * This is the main container component for the schedule interface.
- *
- * TODO: Implement this component
- *
- * Consider:
- * - How to structure the layout (header, controls, calendar)
- * - How to compose smaller components
- * - How to pass data down to child components
- * - How to handle user interactions (view switching, date changes)
- */
 export function ScheduleView({
   selectedDoctorId,
   selectedDate,
@@ -52,43 +42,112 @@ export function ScheduleView({
   onDateChange,
   onViewChange,
 }: ScheduleViewProps) {
-  // TODO: Use the useAppointments hook to fetch data
-  // const { appointments, doctor, loading, error } = useAppointments({
-  //   doctorId: selectedDoctorId,
-  //   date: selectedDate,
-  // });
+  const weekStartDate = useMemo(() => {
+    if (view === 'week') {
+      return startOfWeek(selectedDate, { weekStartsOn: 1 });
+    }
+    return undefined;
+  }, [selectedDate, view]);
+
+  const weekEndDate = useMemo(() => {
+    if (weekStartDate) {
+      return endOfWeek(weekStartDate, { weekStartsOn: 1 });
+    }
+    return undefined;
+  }, [weekStartDate]);
+  
+  const { appointments, doctor, loading, error } = useAppointments({
+    doctorId: selectedDoctorId,
+    date: selectedDate,
+    startDate: weekStartDate,
+    endDate: weekEndDate
+  });
+
+  // Add search and filter functionality
+  const {
+    filteredAppointments,
+    searchTerm,
+    selectedType,
+    setSearchTerm,
+    setSelectedType,
+    clearFilters,
+    hasActiveFilters,
+  } = useAppointmentSearch({ appointments });
+
+  const goToPrev = () => {
+    onDateChange(
+      view === 'day' ? subDays(selectedDate, 1) : subDays(selectedDate, 7)
+    );
+  };
+
+  const goToNext = () => {
+    onDateChange(
+      view === 'day' ? addDays(selectedDate, 1) : addDays(selectedDate, 7)
+    );
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-lg">
-      {/* TODO: Implement the component structure */}
-
       {/* Header with doctor info and controls */}
-      <div className="border-b border-gray-200 p-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">Doctor Schedule</h2>
-            <p className="text-sm text-gray-600 mt-1">
-              TODO: Display doctor name and specialty
-            </p>
+      <div className="border-b border-gray-200 p-4 sm:p-6">
+        <div className="flex flex-col space-y-4 lg:flex-row lg:justify-between lg:items-center lg:space-y-0">
+          <div className="text-center lg:text-left">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Doctor Schedule</h2>
+            {doctor ? (
+              <p className="text-sm text-gray-600 mt-1">
+                Dr. {doctor.name} — <span className="capitalize">{doctor.specialty}</span>
+              </p>
+            ) : (
+              <p className="text-sm text-gray-500 mt-1">Select a doctor to view schedule</p>
+            )}
           </div>
 
-          <div className="flex gap-4">
-            {/* TODO: Add DoctorSelector component */}
-            <div className="text-sm text-gray-500">Doctor Selector</div>
+          {/* Controls */}
+          <div className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-4 lg:flex-row lg:space-x-4">
+            <div className="w-full sm:w-auto">
+              <DoctorSelector
+                selectedDoctorId={selectedDoctorId}
+                onDoctorChange={onDoctorChange}
+              />
+            </div>
 
-            {/* TODO: Add date picker */}
-            <div className="text-sm text-gray-500">Date Picker</div>
-
-            {/* TODO: Add view toggle buttons (Day/Week) */}
-            <div className="flex gap-2">
+            <div className="flex items-center justify-center space-x-2 sm:justify-start">
               <button
-                className="px-4 py-2 text-sm bg-blue-600 text-white rounded"
+                onClick={goToPrev}
+                aria-label="Previous day or week"
+                className="px-3 py-1.5 text-sm bg-gray-100 rounded hover:bg-gray-200 transition flex-shrink-0"
+              >
+                ← Prev
+              </button>
+              <span className="text-sm font-medium text-gray-700 min-w-0 text-center sm:text-left">
+                {format(selectedDate, view === 'week' ? 'MMM yyyy' : 'MMM d, yyyy')}
+              </span>
+              <button
+                onClick={goToNext}
+                aria-label="Next day or week"
+                className="px-3 py-1.5 text-sm bg-gray-100 rounded hover:bg-gray-200 transition flex-shrink-0"
+              >
+                Next →
+              </button>
+            </div>
+
+            <div className="flex bg-gray-100 rounded-md overflow-hidden w-full sm:w-auto">
+              <button
+                className={`flex-1 sm:flex-none px-4 py-2 text-sm ${
+                  view === 'day'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-700 hover:bg-gray-200'
+                }`}
                 onClick={() => onViewChange('day')}
               >
                 Day
               </button>
               <button
-                className="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded"
+                className={`flex-1 sm:flex-none px-4 py-2 text-sm ${
+                  view === 'week'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-700 hover:bg-gray-200'
+                }`}
                 onClick={() => onViewChange('week')}
               >
                 Week
@@ -98,30 +157,82 @@ export function ScheduleView({
         </div>
       </div>
 
-      {/* Calendar View */}
-      <div className="p-6">
-        {/* TODO: Conditionally render DayView or WeekView based on view prop */}
-        <div className="text-center text-gray-500 py-12">
-          <p>Calendar View Goes Here</p>
-          <p className="text-sm mt-2">
-            Implement DayView and WeekView components and render based on selected view
-          </p>
-        </div>
+      {/* Search and Filter Bar */}
+      {!loading && !error && appointments.length > 0 && (
+        <SearchAndFilter
+          searchTerm={searchTerm}
+          selectedType={selectedType}
+          onSearchChange={setSearchTerm}
+          onTypeChange={setSelectedType}
+          onClear={clearFilters}
+          appointmentCount={filteredAppointments.length}
+        />
+      )}
 
-        {/* TODO: Uncomment when components are ready */}
-        {/* {view === 'day' ? (
-          <DayView
-            appointments={appointments}
-            doctor={doctor}
-            date={selectedDate}
+      {/* Calendar View */}
+      <div className="p-4 sm:p-6 relative min-h-[400px]">
+        {loading ? (
+          <LoadingState 
+            message={view === 'week' ? 'Loading week schedule...' : 'Loading day schedule...'} 
+            size="lg" 
           />
+        ) : error ? (
+          <ErrorState
+            title="Failed to Load Schedule"
+            message={error.message || "We couldn't load the appointment schedule. Please try again."}
+          />
+        ) : !doctor ? (
+          <ErrorState
+            title="Doctor Not Found"
+            message="The selected doctor could not be found. Please select a different doctor."
+          />
+        ) : appointments.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No Appointments</h3>
+            <p className="text-gray-500">
+              No appointments are scheduled for {view === 'week' ? 'this week' : 'this day'}.
+            </p>
+          </div>
+        ) : filteredAppointments.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No Matching Appointments</h3>
+            <p className="text-gray-500 mb-4">
+              No appointments match your current search criteria.
+            </p>
+            <button
+              onClick={clearFilters}
+              className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 transition-colors"
+            >
+              Clear Filters
+            </button>
+          </div>
         ) : (
-          <WeekView
-            appointments={appointments}
-            doctor={doctor}
-            weekStartDate={getWeekStart(selectedDate)}
-          />
-        )} */}
+          <>
+            {view === 'day' ? (
+              <DayView
+                appointments={filteredAppointments}
+                doctor={doctor}
+                date={selectedDate}
+              />
+            ) : (
+              <WeekView
+                appointments={filteredAppointments}
+                doctor={doctor}
+                weekStartDate={weekStartDate || selectedDate}
+              />
+            )}
+          </>
+        )}
       </div>
     </div>
   );

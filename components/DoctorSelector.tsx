@@ -14,12 +14,15 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { Doctor } from '@/types';
+import { appointmentService } from '@/services/appointmentService';
 
 interface DoctorSelectorProps {
   selectedDoctorId: string;
   onDoctorChange: (doctorId: string) => void;
+  label?: string; // optional label for accessibility
+  className?: string;
 }
 
 /**
@@ -38,8 +41,13 @@ interface DoctorSelectorProps {
 export function DoctorSelector({
   selectedDoctorId,
   onDoctorChange,
+  label = 'Select Doctor',
+  className = '',
 }: DoctorSelectorProps) {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
 
   // TODO: Fetch doctors
   useEffect(() => {
@@ -47,64 +55,75 @@ export function DoctorSelector({
     // const allDoctors = appointmentService.getAllDoctors();
     // setDoctors(allDoctors);
 
-    // Option 2: Import MOCK_DOCTORS directly
-    // import { MOCK_DOCTORS } from '@/data/mockData';
-    // setDoctors(MOCK_DOCTORS);
+    try {
+      const allDoctors = appointmentService.getAllDoctors();
+      setDoctors(allDoctors);
+    } catch (err) {
+      console.error('Error fetching doctors:', err);
+      setError('Failed to load doctors');
+    } finally {
+      setLoading(false);
+    }
 
     console.log('TODO: Fetch doctors');
   }, []);
 
   // Find currently selected doctor for display
-  const selectedDoctor = doctors.find((d) => d.id === selectedDoctorId);
+  // const selectedDoctor = doctors.find((d) => d.id === selectedDoctorId);
+
+  // memoized selected doctor
+  const selectedDoctor = useMemo(
+    () => doctors.find((d) => d.id === selectedDoctorId),
+    [doctors, selectedDoctorId]
+  );
+
+  if (loading) {
+    return (
+      <div className={`text-gray-500 text-sm ${className}`}>
+        Loading doctors...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={`text-red-500 text-sm ${className}`}>
+        {error}
+      </div>
+    );
+  }
 
   return (
     <div className="doctor-selector">
-      {/* TODO: Implement the dropdown */}
+     <label className="block text-sm font-medium text-gray-700 mb-1 sr-only md:not-sr-only">
+        {label}
+      </label>
 
-      {/* Option 1: Native select */}
-      <select
-        value={selectedDoctorId}
+       <select
+        value={selectedDoctorId || ''}
         onChange={(e) => onDoctorChange(e.target.value)}
-        className="block w-full px-4 py-2 pr-8 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="block w-full px-3 py-2 text-sm border border-gray-300 rounded-lg 
+                   bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all"
+        aria-label={label}
       >
-        <option value="">Select a doctor...</option>
-        {/* TODO: Map over doctors and create options */}
+        <option value="">-- Select a doctor --</option>
+
         {doctors.map((doctor) => (
           <option key={doctor.id} value={doctor.id}>
-            {/* TODO: Format display text (e.g., "Dr. Sarah Chen - Cardiology") */}
-            Dr. {doctor.name} - {doctor.specialty}
+            Dr. {doctor.name} — {doctor.specialty.replace('-', ' ')}
           </option>
         ))}
       </select>
 
-      {/* Option 2: Custom dropdown (BONUS)
-      <button
-        type="button"
-        className="w-full px-4 py-2 text-sm text-left border rounded-lg"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        {selectedDoctor
-          ? `Dr. ${selectedDoctor.name} - ${selectedDoctor.specialty}`
-          : 'Select a doctor...'}
-      </button>
-
-      {isOpen && (
-        <div className="absolute mt-1 w-full bg-white border rounded-lg shadow-lg">
-          {doctors.map((doctor) => (
-            <button
-              key={doctor.id}
-              className="w-full px-4 py-2 text-left hover:bg-gray-100"
-              onClick={() => {
-                onDoctorChange(doctor.id);
-                setIsOpen(false);
-              }}
-            >
-              Dr. {doctor.name} - {doctor.specialty}
-            </button>
-          ))}
+      {selectedDoctor && (
+        <div className="mt-2 text-sm text-gray-600 hidden md:block">
+          Viewing schedule for{' '}
+          <span className="font-medium text-gray-800">
+            Dr. {selectedDoctor.name}
+          </span>{' '}
+          ({selectedDoctor.specialty.replace('-', ' ')})
         </div>
       )}
-      */}
     </div>
   );
 }

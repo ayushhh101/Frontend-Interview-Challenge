@@ -11,11 +11,11 @@
 Mark which features you completed:
 
 ### Core Features
-- [ ] Day View calendar (time slots 8 AM - 6 PM)
-- [ ] Week View calendar (7-day grid)
-- [ ] Doctor selector dropdown
-- [ ] Appointment rendering with correct positioning
-- [ ] Color-coding by appointment type
+- [X] Day View calendar (time slots 8 AM - 6 PM)
+- [X] Week View calendar (7-day grid)
+- [X] Doctor selector dropdown
+- [X] Appointment rendering with correct positioning
+- [X] Color-coding by appointment type
 - [ ] Service layer implementation
 - [ ] Custom hooks (headless pattern)
 - [ ] Component composition

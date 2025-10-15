@@ -14,7 +14,11 @@
 
 'use client';
 
-import type { Appointment, Doctor, TimeSlot } from '@/types';
+import type { Appointment, Doctor, TimeSlot as TimeSlotType } from '@/types';
+import { generateTimeSlots, TimeSlot as DomainTimeSlot } from '@/domain/TimeSlot';
+import { TimeSlot as TimeSlotRow } from './ui/TimeSlot';
+import { format } from 'date-fns';
+import { useMemo } from 'react';
 
 interface DayViewProps {
   appointments: Appointment[];
@@ -43,93 +47,109 @@ interface DayViewProps {
  */
 export function DayView({ appointments, doctor, date }: DayViewProps) {
   /**
-   * TODO: Generate time slots
    *
    * Create an array of TimeSlot objects from 8 AM to 6 PM
    * with 30-minute intervals
    *
    * Hint: You can use a loop or date-fns utilities
    */
-  function generateTimeSlots(): TimeSlot[] {
-    // TODO: Implement time slot generation
-    // Example structure:
-    // return [
-    //   { start: new Date(...8:00), end: new Date(...8:30), label: '8:00 AM' },
-    //   { start: new Date(...8:30), end: new Date(...9:00), label: '8:30 AM' },
-    //   ...
-    // ];
-    return [];
-  }
 
+  const domainTimeSlots: DomainTimeSlot[] = generateTimeSlots({ 
+    date, 
+    startHour: 8,
+    endHour: 18,
+    slotDurationMinutes: 30 
+  });
+  
+  // Convert domain time slots to the format expected by TimeSlotRow
+  const timeSlots: TimeSlotType[] = domainTimeSlots.map(slot => ({
+    start: slot.start,
+    end: slot.end,
+    label: format(slot.start, 'h:mm a')
+  }));
   /**
-   * TODO: Find appointments for a specific time slot
    *
    * Given a time slot, find all appointments that overlap with it
    */
-  function getAppointmentsForSlot(slot: TimeSlot): Appointment[] {
-    // TODO: Implement appointment filtering
-    // Check if appointment.startTime or appointment.endTime falls within the slot
-    return [];
+  function getAppointmentsForSlot(slot: TimeSlotType): Appointment[] {
+   return appointments.filter((appt) => {
+      const start = new Date(appt.startTime);
+      const end = new Date(appt.endTime);
+      return (
+        (start >= slot.start && start < slot.end) ||  // Starts in this slot
+        (end > slot.start && end <= slot.end) ||     // Ends in this slot
+        (start <= slot.start && end >= slot.end)     // Spans across this slot
+      );
+    });
   }
 
-  const timeSlots = generateTimeSlots();
+  // Calculate current time indicator position if today
+  const showCurrentTime = useMemo(() => {
+    const today = new Date();
+    return (
+      today.getFullYear() === date.getFullYear() &&
+      today.getMonth() === date.getMonth() &&
+      today.getDate() === date.getDate()
+    );
+  }, [date]);
+
+  // Calculate the top offset for the current time line
+  const currentTimeOffset = useMemo(() => {
+    if (!showCurrentTime) return 0;
+    const now = new Date();
+    const startOfDay = new Date(date);
+    startOfDay.setHours(8, 0, 0, 0); // 8:00 AM
+    const endOfDay = new Date(date);
+    endOfDay.setHours(18, 0, 0, 0); // 6:00 PM
+
+    if (now < startOfDay) return 0;
+    if (now > endOfDay) return (endOfDay.getTime() - startOfDay.getTime()) / (1000 * 60) * 2; // after end
+
+    const minutesSinceStart = (now.getTime() - startOfDay.getTime()) / (1000 * 60);
+    // Each slot is 30min, each slot row is 50px (from TimeSlot min-h-[50px])
+    return (minutesSinceStart / 30) * 50;
+  }, [date, showCurrentTime]);
 
   return (
-    <div className="day-view">
-      {/* Day header */}
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">
-          {/* TODO: Format date nicely (e.g., "Monday, October 15, 2024") */}
-          {date.toDateString()}
+   <div className="day-view w-full">
+      {/* Day header - Responsive text sizes */}
+      <div className="mb-4 text-center sm:text-left">
+        <h3 className="text-lg sm:text-xl font-semibold text-gray-900">
+          {format(date, 'EEEE, MMMM d, yyyy')}
         </h3>
         {doctor && (
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 mt-1">
             Dr. {doctor.name} - {doctor.specialty}
           </p>
         )}
       </div>
 
-      {/* Timeline grid */}
-      <div className="border border-gray-200 rounded-lg overflow-hidden">
-        {/* TODO: Implement the timeline */}
-        <div className="text-center text-gray-500 py-12">
-          <p>Day View Timeline Goes Here</p>
-          <p className="text-sm mt-2">
-            Implement time slots (8 AM - 6 PM) and position appointments
-          </p>
-
-          {/* Placeholder to show appointments exist */}
-          {appointments.length > 0 && (
-            <div className="mt-4">
-              <p className="text-sm font-medium">
-                {appointments.length} appointment(s) for this day
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* TODO: Replace above with actual timeline implementation */}
-        {/* Example structure:
-        <div className="divide-y divide-gray-100">
-          {timeSlots.map((slot, index) => (
-            <div key={index} className="flex">
-              <div className="w-24 p-2 text-sm text-gray-600">
-                {slot.label}
-              </div>
-              <div className="flex-1 p-2 min-h-[60px] relative">
-                {getAppointmentsForSlot(slot).map(appointment => (
-                  <AppointmentCard key={appointment.id} appointment={appointment} />
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-        */}
+      {/* Timeline - Responsive height and scrolling */}
+      <div className="relative divide-y divide-gray-100 h-[60vh] sm:h-[70vh] lg:max-h-[calc(100vh-300px)] overflow-y-auto border border-gray-200 rounded-lg">
+        {showCurrentTime && (
+          <div
+            className="absolute left-0 right-0 h-1 pointer-events-none z-20"
+            style={{ top: `${currentTimeOffset}px` }}
+          >
+            <div className="w-full h-0.5 bg-red-500" />
+            <span className="hidden sm:inline-block ml-2 text-xs text-red-600 bg-white px-1 rounded shadow border border-red-200" 
+                  style={{ position: 'absolute', left: 0, top: '-0.75rem' }}>
+              Now
+            </span>
+          </div>
+        )}
+        {timeSlots.map((slot, i) => (
+          <TimeSlotRow
+            key={i}
+            slot={slot}
+            appointments={getAppointmentsForSlot(slot)}
+          />
+        ))}
       </div>
 
-      {/* Empty state */}
+      {/* Empty state - Responsive padding */}
       {appointments.length === 0 && (
-        <div className="mt-4 text-center text-gray-500 text-sm">
+        <div className="mt-4 text-center text-gray-500 text-sm py-6 sm:py-10">
           No appointments scheduled for this day
         </div>
       )}

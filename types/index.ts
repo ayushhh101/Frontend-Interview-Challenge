@@ -8,6 +8,7 @@
 /**
  * Appointment types/categories
  */
+import { ReactNode } from 'react';
 export type AppointmentType = 'checkup' | 'consultation' | 'follow-up' | 'procedure';
 
 /**

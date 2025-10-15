@@ -28,34 +28,73 @@ import {
  * This is where you abstract data access from your components.
  */
 export class AppointmentService {
+
+  /**
+   * Helper — compare two dates ignoring time
+   */
+  private isSameDay(date1: Date, date2: Date): boolean {
+    return (
+      date1.getFullYear() === date2.getFullYear() &&
+      date1.getMonth() === date2.getMonth() &&
+      date1.getDate() === date2.getDate()
+    );
+  }
+
+  /**
+   * Helper — check if date is between two dates 
+   */
+  private isWithinRange(date: Date, start: Date, end: Date): boolean {
+    return date >= start && date <= end;
+  }
+
   /**
    * Get all appointments for a specific doctor
-   *
-   * TODO: Implement this method
    */
   getAppointmentsByDoctor(doctorId: string): Appointment[] {
-    // TODO: Implement - filter MOCK_APPOINTMENTS by doctorId
-    throw new Error('Not implemented - getAppointmentsByDoctor');
+    return MOCK_APPOINTMENTS.filter((apt) => apt.doctorId === doctorId);
+  }
+
+  private validateDate(date: Date, paramName: string): void {
+    if (!(date instanceof Date) || isNaN(date.getTime())) {
+      throw new Error(`Invalid ${paramName}: ${date}`);
+    }
+  }
+
+  /**
+   * Enhanced error handling for doctor ID
+   */
+  private validateDoctorId(doctorId: string): void {
+    if (!doctorId || typeof doctorId !== 'string') {
+      throw new Error('Please select a Doctor');
+    }
   }
 
   /**
    * Get appointments for a specific doctor on a specific date
    *
-   * TODO: Implement this method
    * @param doctorId - The doctor's ID
    * @param date - The date to filter by
    * @returns Array of appointments for that doctor on that date
    */
   getAppointmentsByDoctorAndDate(doctorId: string, date: Date): Appointment[] {
-    // TODO: Implement - filter by doctor AND date
-    // Hint: You'll need to compare dates properly (same day, ignoring time)
-    throw new Error('Not implemented - getAppointmentsByDoctorAndDate');
+    this.validateDoctorId(doctorId);
+      this.validateDate(date, 'date');
+
+      const doctor = this.getDoctorById(doctorId);
+      if (!doctor) {
+        throw new Error(`Doctor with ID "${doctorId}" not found`);
+      }
+
+    return MOCK_APPOINTMENTS.filter(
+      (apt) =>
+        apt.doctorId === doctorId &&
+        this.isSameDay(new Date(apt.startTime), date)
+    );
   }
 
   /**
    * Get appointments for a specific doctor within a date range (for week view)
    *
-   * TODO: Implement this method
    * @param doctorId - The doctor's ID
    * @param startDate - Start of the date range
    * @param endDate - End of the date range
@@ -66,8 +105,29 @@ export class AppointmentService {
     startDate: Date,
     endDate: Date
   ): Appointment[] {
-    // TODO: Implement - filter by doctor AND date range
-    throw new Error('Not implemented - getAppointmentsByDoctorAndDateRange');
+   try {
+      this.validateDoctorId(doctorId);
+      this.validateDate(startDate, 'startDate');
+      this.validateDate(endDate, 'endDate');
+
+      if (startDate > endDate) {
+        throw new Error('Start date cannot be after end date');
+      }
+
+      const doctor = this.getDoctorById(doctorId);
+      if (!doctor) {
+        throw new Error(`Doctor with ID "${doctorId}" not found`);
+      }
+
+      return MOCK_APPOINTMENTS.filter(
+        (apt) =>
+          apt.doctorId === doctorId &&
+          this.isWithinRange(new Date(apt.startTime), startDate, endDate)
+      );
+    } catch (error) {
+      console.error('Error in getAppointmentsByDoctorAndDateRange:', error);
+      throw error;
+    }
   }
 
   /**
@@ -75,32 +135,34 @@ export class AppointmentService {
    *
    * This is useful for display purposes where you need patient/doctor details
    *
-   * TODO: Implement this helper method
    */
   getPopulatedAppointment(appointment: Appointment): PopulatedAppointment | null {
-    // TODO: Implement - merge appointment with patient and doctor data
-    // Hint: Use getDoctorById and getPatientById from mockData
-    throw new Error('Not implemented - getPopulatedAppointment');
+    const doctor = getDoctorById(appointment.doctorId);
+    const patient = getPatientById(appointment.patientId);
+
+    if (!doctor || !patient) return null;
+
+    return {
+      ...appointment,
+      doctor,
+      patient,
+    };
   }
 
   /**
    * Get all doctors
    *
-   * TODO: Implement this method
    */
   getAllDoctors(): Doctor[] {
-    // TODO: Implement - return all doctors
-    throw new Error('Not implemented - getAllDoctors');
+    return MOCK_DOCTORS;
   }
 
   /**
    * Get doctor by ID
    *
-   * TODO: Implement this method
    */
   getDoctorById(id: string): Doctor | undefined {
-    // TODO: Implement - find doctor by ID
-    throw new Error('Not implemented - getDoctorById');
+     return MOCK_DOCTORS.find((doc) => doc.id === id);
   }
 
   /**
@@ -111,6 +173,34 @@ export class AppointmentService {
    * - Get appointments by type
    * - etc.
    */
+  /**
+   * BONUS: Sort appointments by start time
+   */
+  sortAppointmentsByTime(appointments: Appointment[]): Appointment[] {
+    return [...appointments].sort(
+      (a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
+    );
+  }
+
+  /**
+   * BONUS: Check for overlapping appointments
+   */
+  hasOverlappingAppointments(appointments: Appointment[]): boolean {
+    const sorted = this.sortAppointmentsByTime(appointments);
+    for (let i = 0; i < sorted.length - 1; i++) {
+      const currentEnd = new Date(sorted[i].endTime).getTime();
+      const nextStart = new Date(sorted[i + 1].startTime).getTime();
+      if (currentEnd > nextStart) return true;
+    }
+    return false;
+  }
+
+  /**
+   * Get all patients
+   */
+  getAllPatients(): Patient[] {
+    return MOCK_PATIENTS;
+  }
 }
 
 /**
