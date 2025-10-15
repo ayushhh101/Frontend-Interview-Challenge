@@ -19,7 +19,7 @@ export function Spinner({ size = 'md', className = '' }: SpinnerProps) {
   );
 }
 
-// Loading state component with spinner
+// loading state component with spinner
 interface LoadingStateProps {
   message?: string;
   size?: 'sm' | 'md' | 'lg';

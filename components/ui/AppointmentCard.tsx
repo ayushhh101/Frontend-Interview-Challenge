@@ -5,12 +5,12 @@ import { format } from 'date-fns';
 import { getPatientById } from '@/data/mockData';
 
 const TYPE_COLORS: Record<string, string> = {
-  consultation: 'bg-green-100 border-green-400',
-  procedure: 'bg-purple-100 border-purple-400',
-  'follow-up': 'bg-orange-100 border-orange-400',
-  followup: 'bg-orange-100 border-orange-400',
-  checkup: 'bg-blue-100 border-blue-400',
-  default: 'bg-gray-100 border-gray-300',
+   consultation: 'bg-green-100 dark:bg-green-900 border-green-400 dark:border-green-500',
+  procedure: 'bg-purple-100 dark:bg-purple-900 border-purple-400 dark:border-purple-500',
+  'follow-up': 'bg-orange-100 dark:bg-orange-900 border-orange-400 dark:border-orange-500',
+  followup: 'bg-orange-100 dark:bg-orange-900 border-orange-400 dark:border-orange-500',
+  checkup: 'bg-blue-100 dark:bg-blue-900 border-blue-400 dark:border-blue-500',
+  default: 'bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600',
 };
 
 interface AppointmentCardProps {
@@ -18,26 +18,19 @@ interface AppointmentCardProps {
 }
 
 export function AppointmentCard({ appointment }: AppointmentCardProps) {
-  // Get the appointment type color
+  // get the appointment type color
   const colorClass = TYPE_COLORS[appointment.type] || TYPE_COLORS.default;
 
-  // Get the patient information
   const patient = getPatientById(appointment.patientId);
   const patientName = patient ? patient.name : 'Unknown Patient';
 
-  // Calculate duration in minutes
-  const duration =
-    (new Date(appointment.endTime).getTime() -
-      new Date(appointment.startTime).getTime()) /
-    (1000 * 60);
-
   return (
     <div
-      className={`border-l-4 rounded-md p-1 sm:p-1.5 md:p-2 shadow-sm ${colorClass} overflow-hidden mb-1`}
+      className={`border-l-4 rounded-md p-1 sm:p-1.5 md:p-2 shadow-sm ${colorClass} overflow-hidden mb-1 transition-colors`}
     >
-      <p className="text-xs sm:text-sm font-semibold truncate">{patientName}</p>
-      <p className="text-xs opacity-75 capitalize">{appointment.type}</p>
-      <p className="text-xs">
+      <p className="text-xs sm:text-sm font-semibold truncate text-gray-900 dark:text-gray-100">{patientName}</p>
+      <p className="text-xs opacity-75 capitalize text-gray-700 dark:text-gray-300">{appointment.type}</p>
+      <p className="text-xs text-gray-600 dark:text-gray-400">
         {format(new Date(appointment.startTime), 'h:mm a')} -{' '}
         {format(new Date(appointment.endTime), 'h:mm a')}
       </p>

@@ -1,17 +1,3 @@
-/**
- * ScheduleView Component
- *
- * Main component that orchestrates the schedule display.
- * This component should compose smaller components together.
- *
- * TODO for candidates:
- * 1. Create the component structure (header, controls, calendar)
- * 2. Compose DoctorSelector, DayView, WeekView together
- * 3. Handle view switching (day vs week)
- * 4. Manage state or use the useAppointments hook
- * 5. Think about component composition and reusability
- */
-
 'use client';
 
 import { useMemo, useState } from 'react';
@@ -63,7 +49,7 @@ export function ScheduleView({
     endDate: weekEndDate
   });
 
-  // Add search and filter functionality
+  // search and filter functionality
   const {
     filteredAppointments,
     searchTerm,
@@ -71,7 +57,6 @@ export function ScheduleView({
     setSearchTerm,
     setSelectedType,
     clearFilters,
-    hasActiveFilters,
   } = useAppointmentSearch({ appointments });
 
   const goToPrev = () => {
@@ -87,18 +72,18 @@ export function ScheduleView({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg">
+    <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg transition-colors border border-gray-400 dark:border-gray-600">
       {/* Header with doctor info and controls */}
-      <div className="border-b border-gray-200 p-4 sm:p-6">
+      <div className="border-b border-gray-900 dark:border-gray-700 p-4 sm:p-6">
         <div className="flex flex-col space-y-4 lg:flex-row lg:justify-between lg:items-center lg:space-y-0">
           <div className="text-center lg:text-left">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Doctor Schedule</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Doctor Schedule</h2>
             {doctor ? (
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
                 Dr. {doctor.name} — <span className="capitalize">{doctor.specialty}</span>
               </p>
             ) : (
-              <p className="text-sm text-gray-500 mt-1">Select a doctor to view schedule</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Select a doctor to view schedule</p>
             )}
           </div>
 
@@ -115,38 +100,38 @@ export function ScheduleView({
               <button
                 onClick={goToPrev}
                 aria-label="Previous day or week"
-                className="px-3 py-1.5 text-sm bg-gray-100 rounded hover:bg-gray-200 transition flex-shrink-0"
+                className="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition flex-shrink-0"
               >
                 ← Prev
               </button>
-              <span className="text-sm font-medium text-gray-700 min-w-0 text-center sm:text-left">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-200 min-w-0 text-center sm:text-left">
                 {format(selectedDate, view === 'week' ? 'MMM yyyy' : 'MMM d, yyyy')}
               </span>
               <button
                 onClick={goToNext}
                 aria-label="Next day or week"
-                className="px-3 py-1.5 text-sm bg-gray-100 rounded hover:bg-gray-200 transition flex-shrink-0"
+                className="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition flex-shrink-0"
               >
                 Next →
               </button>
             </div>
 
-            <div className="flex bg-gray-100 rounded-md overflow-hidden w-full sm:w-auto">
+            <div className="flex bg-gray-100 dark:bg-gray-800 rounded-md overflow-hidden w-full sm:w-auto">
               <button
-                className={`flex-1 sm:flex-none px-4 py-2 text-sm ${
+                className={`flex-1 sm:flex-none px-4 py-2 text-sm transition-colors ${
                   view === 'day'
                     ? 'bg-blue-600 text-white'
-                    : 'text-gray-700 hover:bg-gray-200'
+                    : 'text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700'
                 }`}
                 onClick={() => onViewChange('day')}
               >
                 Day
               </button>
               <button
-                className={`flex-1 sm:flex-none px-4 py-2 text-sm ${
+                className={`flex-1 sm:flex-none px-4 py-2 text-sm transition-colors ${
                   view === 'week'
                     ? 'bg-blue-600 text-white'
-                    : 'text-gray-700 hover:bg-gray-200'
+                    : 'text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700'
                 }`}
                 onClick={() => onViewChange('week')}
               >
@@ -157,7 +142,7 @@ export function ScheduleView({
         </div>
       </div>
 
-      {/* Search and Filter Bar */}
+      {/* search and filter bar */}
       {!loading && !error && appointments.length > 0 && (
         <SearchAndFilter
           searchTerm={searchTerm}
@@ -170,7 +155,7 @@ export function ScheduleView({
       )}
 
       {/* Calendar View */}
-      <div className="p-4 sm:p-6 relative min-h-[400px]">
+      <div className="p-4 sm:p-6 relative min-h-[400px] bg-white dark:bg-gray-900 transition-colors">
         {loading ? (
           <LoadingState 
             message={view === 'week' ? 'Loading week schedule...' : 'Loading day schedule...'} 

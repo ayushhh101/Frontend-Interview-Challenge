@@ -12,11 +12,25 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="transition-colors">
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              // Prevent flash of unstyled content
+              (function() {
+                const theme = localStorage.getItem('darkMode');
+                if (theme === 'true' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                  document.documentElement.classList.add('dark');
+                }
+              })();
+            `,
+          }}
+        />
       </head>
-      <body className="bg-gray-50 min-h-screen">{children}</body>
+      <body className="transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+        {children}
+      </body>
     </html>
   );
 }

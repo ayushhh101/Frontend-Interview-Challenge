@@ -1,17 +1,3 @@
-/**
- * DoctorSelector Component
- *
- * Dropdown to select which doctor's schedule to view.
- * For front desk staff (can see all doctors).
- *
- * TODO for candidates:
- * 1. Fetch list of all doctors
- * 2. Display in a dropdown/select
- * 3. Show doctor name and specialty
- * 4. Handle selection change
- * 5. Consider using a custom dropdown or native select
- */
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -25,19 +11,6 @@ interface DoctorSelectorProps {
   className?: string;
 }
 
-/**
- * DoctorSelector Component
- *
- * A dropdown to select a doctor from the list of available doctors.
- *
- * TODO: Implement this component
- *
- * Consider:
- * - Should you fetch doctors here or accept them as props?
- * - Native <select> or custom dropdown component?
- * - How to display doctor info (name + specialty)?
- * - Should this be a reusable component?
- */
 export function DoctorSelector({
   selectedDoctorId,
   onDoctorChange,
@@ -49,12 +22,7 @@ export function DoctorSelector({
   const [error, setError] = useState<string | null>(null);
 
 
-  // TODO: Fetch doctors
   useEffect(() => {
-    // Option 1: Use appointmentService to get doctors
-    // const allDoctors = appointmentService.getAllDoctors();
-    // setDoctors(allDoctors);
-
     try {
       const allDoctors = appointmentService.getAllDoctors();
       setDoctors(allDoctors);
@@ -65,13 +33,8 @@ export function DoctorSelector({
       setLoading(false);
     }
 
-    console.log('TODO: Fetch doctors');
   }, []);
 
-  // Find currently selected doctor for display
-  // const selectedDoctor = doctors.find((d) => d.id === selectedDoctorId);
-
-  // memoized selected doctor
   const selectedDoctor = useMemo(
     () => doctors.find((d) => d.id === selectedDoctorId),
     [doctors, selectedDoctorId]
@@ -95,15 +58,17 @@ export function DoctorSelector({
 
   return (
     <div className="doctor-selector">
-     <label className="block text-sm font-medium text-gray-700 mb-1 sr-only md:not-sr-only">
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sr-only md:not-sr-only transition-colors">
         {label}
       </label>
 
-       <select
+      <select
         value={selectedDoctorId || ''}
         onChange={(e) => onDoctorChange(e.target.value)}
-        className="block w-full px-3 py-2 text-sm border border-gray-300 rounded-lg 
-                   bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 transition-all"
+        className="block w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg 
+                   bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 
+                   focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-blue-400 
+                   transition-colors"
         aria-label={label}
       >
         <option value="">-- Select a doctor --</option>
@@ -116,9 +81,9 @@ export function DoctorSelector({
       </select>
 
       {selectedDoctor && (
-        <div className="mt-2 text-sm text-gray-600 hidden md:block">
+        <div className="mt-2 text-sm text-gray-600 dark:text-gray-400 hidden md:block transition-colors">
           Viewing schedule for{' '}
-          <span className="font-medium text-gray-800">
+          <span className="font-medium text-gray-800 dark:text-gray-200 transition-colors">
             Dr. {selectedDoctor.name}
           </span>{' '}
           ({selectedDoctor.specialty.replace('-', ' ')})
